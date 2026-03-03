@@ -2,7 +2,8 @@ token en la sesión -> localstorage
 validaciones de contraseñas repetidas al regitrar
 que no se repita email
 No se pueda meter datos vacíos, espacion con trim(). Id no se sepa.
-
+ids están expuestos en las sticky notes, revisar.
+proteger url de la api por .env
 
 notas con un usuario, un listado de usuario y ves si ha escrito notas. Si no ha escrito sale que no. 
 Asociar una nota a un usuario en base a su nombre o listado. El admin lo puede hacer.

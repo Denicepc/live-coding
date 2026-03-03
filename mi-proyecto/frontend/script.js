@@ -13,7 +13,7 @@ if (loginForm || registerForm) {
         window.location.href = "dashboard.html";
     }
 } else if (logoutBtn) {
-    // Si estamos en el Dashboard y NO hay token, te expulso al login
+    // Si estamos en el Dashboard y NO hay token, devuelve al login
     if (!token) {
         window.location.href = "index.html";
     } else {
@@ -27,7 +27,7 @@ if (loginForm || registerForm) {
 // ==========================================
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // para que no recargue el formulario
         const identifier = document.getElementById("login-email").value;
         const password = document.getElementById("login-password").value;
         const errorMsg = document.getElementById("login-error");
@@ -110,8 +110,14 @@ if (logoutBtn) {
     document.getElementById("create-note-btn").addEventListener("click", async () => {
         const titleInput = document.getElementById("new-note-title");
         const contentInput = document.getElementById("new-note-content");
+        const errorMsg = document.getElementById("note-error");
+        errorMsg.classList.add("hidden");
 
-        if (!titleInput.value.trim()) return alert("El título es obligatorio");
+        if (!titleInput.value.trim()){
+            errorMsg.textContent = "El título es obligatorio";   
+            errorMsg.classList.remove("hidden"); 
+            return;
+        }
 
         try {
             const response = await fetch(`${API_URL}/notes`, {
@@ -129,7 +135,8 @@ if (logoutBtn) {
                 fetchNotes();
             } else {
                 const err = await response.json();
-                alert("Error: " + err.error);
+                errorMsg.textContent = err.error;
+                errorMsg.classList.remove("hidden");
             }
         } catch (error) {
             console.error(error);
@@ -182,6 +189,11 @@ function renderNotes(notes) {
                 class="form-textarea p-1 border-0 focus:ring-0 bg-transparent disabled:bg-transparent disabled:opacity-100 disabled:text-slate-900 font-handwritten text-lg flex-1 w-full resize-none transition-colors rounded">${note.content}</textarea>
             
             <div class="flex gap-2 justify-end mt-2">
+                <button id="restore-btn-${note.id}"  onclick="restoreNote('${note.id}')" 
+                    class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors font-bold shadow-sm hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-restore"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3.06 13a9 9 0 1 0 .49 -4.087" /><path d="M3 4.001v5h5" /><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                    </svg>
+                </button>
                 <button id="edit-btn-${note.id}" onclick="toggleEditMode('${note.id}')" 
                     class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition-colors font-bold shadow-sm">
                     Editar
@@ -213,10 +225,12 @@ async function toggleEditMode(noteId) {
     const titleInput = document.getElementById(`title-${noteId}`);
     const contentInput = document.getElementById(`content-${noteId}`);
     const editBtn = document.getElementById(`edit-btn-${noteId}`);
+    const restoreBtn = document.getElementById(`restore-btn-${noteId}`);
 
     const isEditing = !titleInput.disabled;
 
     if (isEditing) {
+        // --- ESTAMOS GUARDANDO ---
         const newTitle = titleInput.value.trim();
         const newContent = contentInput.value.trim();
 
@@ -237,13 +251,18 @@ async function toggleEditMode(noteId) {
             });
 
             if (response.ok) {
+                // Salir del modo edición tras guardar con éxito
                 titleInput.disabled = true;
                 contentInput.disabled = true;
                 titleInput.classList.replace('bg-white/50', 'bg-transparent');
                 contentInput.classList.replace('bg-white/50', 'bg-transparent');
+                
                 editBtn.textContent = "Editar";
                 editBtn.classList.replace('bg-green-500', 'bg-orange-500');
                 editBtn.classList.replace('hover:bg-green-600', 'hover:bg-orange-700');
+                
+                // Ocultamos el botón de restaurar al terminar
+                restoreBtn.classList.add("hidden");
             } else {
                 const data = await response.json();
                 alert("Error al editar: " + data.error);
@@ -252,14 +271,51 @@ async function toggleEditMode(noteId) {
             alert("Ocurrió un error al guardar los cambios.");
         }
     } else {
+        // --- ESTAMOS ENTRANDO AL MODO EDICIÓN ---
+        
+        // 1. Guardamos el valor actual por si el usuario le da a "Restaurar"
+        titleInput.dataset.original = titleInput.value;
+        contentInput.dataset.original = contentInput.value;
+
+        // 2. Mostramos el botón de restaurar
+        restoreBtn.classList.remove("hidden");
+
+        // 3. Cambiamos la UI a modo edición
         titleInput.disabled = false;
         contentInput.disabled = false;
         titleInput.classList.replace('bg-transparent', 'bg-white/50');
         contentInput.classList.replace('bg-transparent', 'bg-white/50');
+        
         editBtn.textContent = "Guardar";
         editBtn.classList.replace('bg-orange-500', 'bg-green-500');
         editBtn.classList.replace('hover:bg-orange-700', 'hover:bg-green-600');
+        
         contentInput.focus();
         contentInput.selectionStart = contentInput.selectionEnd = contentInput.value.length;
     }
+}
+
+function restoreNote(noteId) {
+    const titleInput = document.getElementById(`title-${noteId}`);
+    const contentInput = document.getElementById(`content-${noteId}`);
+    const editBtn = document.getElementById(`edit-btn-${noteId}`);
+    const restoreBtn = document.getElementById(`restore-btn-${noteId}`);
+
+    // 1. Restaurar los valores a los originales (los que guardamos en el dataset)
+    titleInput.value = titleInput.dataset.original || titleInput.value;
+    contentInput.value = contentInput.dataset.original || contentInput.value;
+
+    // 2. Bloquear los inputs de nuevo
+    titleInput.disabled = true;
+    contentInput.disabled = true;
+    titleInput.classList.replace('bg-white/50', 'bg-transparent');
+    contentInput.classList.replace('bg-white/50', 'bg-transparent');
+
+    // 3. Devolver el botón "Guardar" a "Editar"
+    editBtn.textContent = "Editar";
+    editBtn.classList.replace('bg-green-500', 'bg-orange-500');
+    editBtn.classList.replace('hover:bg-green-600', 'hover:bg-orange-700');
+
+    // 4. Ocultar el botón de restaurar
+    restoreBtn.classList.add("hidden");
 }
