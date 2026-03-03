@@ -1,0 +1,29 @@
+/* style.css */
+
+/* Aseguramos que el body ocupe toda la pantalla */
+body {
+  min-height: max(884px, 100dvh);
+}
+
+/* Textura principal de corcho para el fondo del tablero */
+.cork-texture {
+  background-color: #d2b48c;
+  background-image: radial-gradient(circle at 2px 2px, rgba(139, 69, 19, 0.15) 1px, transparent 0);
+  background-size: 8px 8px;
+}
+
+/* Efectos visuales para las notas */
+.sticky-note {
+  box-shadow: 2px 5px 15px rgba(0,0,0,0.1); /* Sombra suave */
+  transition: transform 0.2s; /* Transición suave al pasar el ratón */
+}
+
+/* Pequeño movimiento al hacer hover sobre una nota */
+.sticky-note:hover {
+  transform: scale(1.02) rotate(1deg);
+}
+
+/* Sombra extra para las chinchetas */
+.pushpin {
+  filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.3));
+}

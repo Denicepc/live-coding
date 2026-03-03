@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Login - Sticky Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Gochi+Hand&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-background-light font-display text-slate-900 min-h-screen flex flex-col">
+
+    <div class="relative flex h-screen w-full flex-col overflow-hidden cork-texture items-center justify-center p-6">
+        <h1 class="text-white text-5xl font-handwritten drop-shadow-md mb-8">Sticky Board</h1>
+        <div class="relative w-full max-w-[400px] bg-[#eebd2b] p-8 sticky-note flex flex-col items-center">
+            <h2 class="text-slate-900 font-handwritten text-3xl mb-8 self-start">¡Hola de nuevo!</h2>
+            
+            <form id="login-form" class="w-full space-y-6">
+                <div class="flex flex-col w-full">
+                    <label class="font-handwritten text-xl mb-1">Email</label>
+                    <input id="login-email" required class="form-input border-b-2 border-black/10 bg-transparent h-12 px-0 text-lg font-handwritten" placeholder="tu@email.com" type="email"/>
+                </div>
+                <div class="flex flex-col w-full">
+                    <label class="font-handwritten text-xl mb-1">Contraseña</label>
+                    <input id="login-password" required class="form-input border-b-2 border-black/10 bg-transparent h-12 px-0 text-lg font-handwritten" placeholder="••••••••" type="password"/>
+                </div>
+                <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-lg font-bold text-lg shadow-md hover:bg-slate-800">Entrar</button>
+            </form>
+            
+            <p id="login-error" class="text-red-600 font-bold mt-4 hidden"></p>
+            
+            <div class="mt-8 text-center">
+                <a href="register.html" class="text-slate-800 font-handwritten text-lg hover:underline">¿No tienes cuenta? Regístrate</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

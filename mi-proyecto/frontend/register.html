@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Registro - Sticky Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Gochi+Hand&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-background-light font-display text-slate-900 min-h-screen flex flex-col">
+
+    <div class="relative flex h-screen w-full flex-col overflow-hidden cork-texture items-center justify-center p-6">
+        <div class="relative w-full max-w-sm bg-[#bae6fd] shadow-xl rotate-[-1deg] p-8 pb-12 sticky-note">
+            <h1 class="font-handwritten text-4xl text-slate-800 tracking-tight text-center mb-6">Crear Cuenta</h1>
+            
+            <form id="register-form" class="space-y-4">
+                <div class="flex flex-col">
+                    <label class="font-handwritten text-xl text-slate-700 mb-1">Usuario</label>
+                    <input id="reg-username" required class="form-input w-full border-b-2 border-dashed border-slate-400 bg-transparent px-1 py-2 font-handwritten text-lg" placeholder="Tu nombre..." type="text"/>
+                </div>
+                <div class="flex flex-col">
+                    <label class="font-handwritten text-xl text-slate-700 mb-1">Email</label>
+                    <input id="reg-email" required class="form-input w-full border-b-2 border-dashed border-slate-400 bg-transparent px-1 py-2 font-handwritten text-lg" placeholder="ejemplo@correo.com" type="email"/>
+                </div>
+                <div class="flex flex-col">
+                    <label class="font-handwritten text-xl text-slate-700 mb-1">Contraseña</label>
+                    <input id="reg1-password" required class="form-input w-full border-b-2 border-dashed border-slate-400 bg-transparent px-1 py-2 font-handwritten text-lg" type="password"/>
+                </div>
+                <div class="flex flex-col">
+                    <label class="font-handwritten text-xl text-slate-700 mb-1">Repetir contraseña</label>
+                    <input id="reg2-password" required class="form-input w-full border-b-2 border-dashed border-slate-400 bg-transparent px-1 py-2 font-handwritten text-lg" type="password"/>
+                </div>
+                <button type="submit" class="w-full bg-[#eebd2b] text-slate-900 font-bold py-3 px-6 rounded-lg mt-6 hover:opacity-90">Registrarse</button>
+            </form>
+            
+            <p id="reg-error" class="text-red-600 font-bold mt-4 hidden"></p>
+            
+            <div class="text-center pt-4 mt-4 border-t border-slate-300">
+                <a href="index.html" class="font-handwritten text-lg text-slate-600 hover:text-blue-600">¿Ya tienes cuenta? Inicia sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

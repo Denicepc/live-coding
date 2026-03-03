@@ -1,0 +1,22 @@
+services:
+  api:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - JWT_SECRET=cambia_esto_en_produccion_por_algo_seguro
+      - FRONTEND_URL=http://127.0.0.1:5500
+    volumes:
+      - db_data:/app/data
+    restart: unless-stopped
+
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+
+volumes:
+  db_data:
