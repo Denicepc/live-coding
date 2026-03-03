@@ -1,0 +1,11 @@
+token en la sesión -> localstorage
+validaciones de contraseñas repetidas al regitrar
+que no se repita email
+No se pueda meter datos vacíos, espacion con trim(). Id no se sepa.
+
+
+notas con un usuario, un listado de usuario y ves si ha escrito notas. Si no ha escrito sale que no. 
+Asociar una nota a un usuario en base a su nombre o listado. El admin lo puede hacer.
+Gestor de usuarios que tengan permisos, un admin hace todo. Otro usuario gestor que pueda editar y asignar notas, pero no puede borrarle las notas a nadie. El usuario normal ve notas, pero no puede hacer más.
+
+blog - que diga cuando se crea una nota cuando y quién y que lleve a esa nota.
