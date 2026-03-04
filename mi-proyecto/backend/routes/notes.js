@@ -2,6 +2,7 @@
 
 const express = require("express");
 const { v4: uuidv4 } = require("uuid");
+const validator = require("validator");
 const { getDb } = require("../db");
 const { authMiddleware } = require("../middleware/auth");
 
@@ -71,9 +72,15 @@ router.post("/", (req, res) => {
   const id = uuidv4();
   const share_token = is_public ? uuidv4() : null;
 
+  const cleanTitle = validator.escape(title.trim());
+  const cleanContent = validator.escape(content.trim());
+
   db.prepare(
     "INSERT INTO notes (id, user_id, title, content, color, tags, is_public, share_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-  ).run(id, req.user.id, title.trim(), content.trim(), color, JSON.stringify(tags), is_public ? 1 : 0, share_token);
+  ).run(id, req.user.id, cleanTitle, cleanContent, color, JSON.stringify(tags), is_public ? 1 : 0, share_token);
+  db.prepare(
+    "INSERT INTO activity_log (id, user_id, note_id, action) VALUES (?, ?, ?, 'created')"
+  ).run(uuidv4(), req.user.id, id);
 
   return res.status(201).json({ note: formatNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(id)) });
 });
@@ -93,8 +100,8 @@ router.put("/:id", (req, res) => {
   if (content !== undefined && content.length > 10000)
     return res.status(400).json({ error: "Contenido demasiado largo (max 10.000)" });
 
-  const newTitle    = title     !== undefined ? title.trim()         : existing.title;
-  const newContent  = content   !== undefined ? content.trim()       : existing.content;
+  const newTitle    = title     !== undefined ? validator.escape(title.trim()) : existing.title;
+  const newContent  = content   !== undefined ? validator.escape(content.trim()) : existing.content;
   const newColor    = color     !== undefined ? color                : existing.color;
   const newTags     = tags      !== undefined ? JSON.stringify(tags) : existing.tags;
   const newIsPublic = is_public !== undefined ? (is_public ? 1 : 0) : existing.is_public;
@@ -116,7 +123,9 @@ router.delete("/:id", (req, res) => {
   const db = getDb();
   const note = db.prepare("SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL").get(req.params.id);
   if (!note) return res.status(404).json({ error: "Nota no encontrada" });
-  if (note.user_id !== req.user.id) return res.status(403).json({ error: "Sin acceso a esta nota" });
+  if (note.user_id !== req.user.id && req.user.role !== "admin") {
+    return res.status(403).json({ error: "Solo un admin puede borrar notas de otros usuarios" });
+  }
   db.prepare("UPDATE notes SET deleted_at=datetime('now'), is_public=0, share_token=NULL WHERE id=?")
     .run(req.params.id);
   return res.json({ message: "Nota movida a la papelera" });
@@ -127,7 +136,9 @@ router.post("/:id/restore", (req, res) => {
   const db = getDb();
   const note = db.prepare("SELECT * FROM notes WHERE id = ? AND deleted_at IS NOT NULL").get(req.params.id);
   if (!note) return res.status(404).json({ error: "Nota no encontrada en la papelera" });
-  if (note.user_id !== req.user.id) return res.status(403).json({ error: "Sin acceso a esta nota" });
+  if (note.user_id !== req.user.id && req.user.role !== "admin") {
+    return res.status(403).json({ error: "Solo un admin puede borrar notas de otros usuarios" });
+  }
   db.prepare("UPDATE notes SET deleted_at=NULL, updated_at=datetime('now') WHERE id=?").run(req.params.id);
   return res.json({ note: formatNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(req.params.id)) });
 });
@@ -137,7 +148,9 @@ router.delete("/:id/permanent", (req, res) => {
   const db = getDb();
   const note = db.prepare("SELECT * FROM notes WHERE id = ? AND deleted_at IS NOT NULL").get(req.params.id);
   if (!note) return res.status(404).json({ error: "Nota no encontrada en la papelera" });
-  if (note.user_id !== req.user.id) return res.status(403).json({ error: "Sin acceso a esta nota" });
+  if (note.user_id !== req.user.id && req.user.role !== "admin") {
+    return res.status(403).json({ error: "Solo un admin puede borrar notas de otros usuarios" });
+  }
   db.prepare("DELETE FROM notes WHERE id = ?").run(req.params.id);
   return res.json({ message: "Nota eliminada permanentemente" });
 });

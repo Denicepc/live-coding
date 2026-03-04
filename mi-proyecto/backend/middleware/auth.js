@@ -25,4 +25,11 @@ function adminMiddleware(req, res, next) {
   next();
 }
 
-module.exports = { authMiddleware, adminMiddleware, JWT_SECRET };
+function gestorMiddleware(req, res, next) {
+  if (!["admin", "gestor"].includes(req.user?.role)) {
+    return res.status(403).json({ error: "Se requiere rol gestor o admin" });
+  }
+  next();
+}
+
+module.exports = { authMiddleware, adminMiddleware, gestorMiddleware, JWT_SECRET };

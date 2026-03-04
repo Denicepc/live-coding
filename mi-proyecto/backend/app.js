@@ -7,6 +7,7 @@ const authRoutes   = require("./routes/auth");
 const notesRoutes  = require("./routes/notes");
 const sharedRoutes = require("./routes/shared");
 const adminRoutes  = require("./routes/admin");
+const activityRoutes = require("./routes/activity");
 const rateLimit = require("express-rate-limit");
 
 const app = express();
@@ -21,7 +22,7 @@ const loginLimiter = rateLimit({
 
 // CORS (FRONTEND_URL se define en docker-compose.yml para produccion)
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "*",
+  origin: process.env.FRONTEND_URL, // solo permitir el frontend de la app
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
@@ -29,13 +30,15 @@ app.use(cors({
 // Parsear el body de las peticiones como JSON.
 app.use(express.json({ limit: "50kb" }));
 
+app.use("/api/auth/login", loginLimiter);
+app.use("/api/auth/register", loginLimiter);
+
+
 app.use("/api/auth",   authRoutes);   
 app.use("/api/notes",  notesRoutes);  
 app.use("/api/shared", sharedRoutes); 
 app.use("/api/admin",  adminRoutes);  
-
-app.use("/api/auth/login", loginLimiter);
-app.use("/api/auth/register", loginLimiter);
+app.use("/api/activity", activityRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
