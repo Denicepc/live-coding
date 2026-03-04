@@ -1,8 +1,8 @@
 // CRUD de notas con busqueda, papelera y notas publicas
 
+const validator = require("validator");
 const express = require("express");
 const { v4: uuidv4 } = require("uuid");
-const validator = require("validator");
 const { getDb } = require("../db");
 const { authMiddleware } = require("../middleware/auth");
 
