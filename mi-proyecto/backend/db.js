@@ -28,7 +28,8 @@ function initSchema(db) {
       email       TEXT UNIQUE NOT NULL,
       username    TEXT UNIQUE NOT NULL,
       password    TEXT NOT NULL,
-      role        TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('admin', 'user')),
+      role        TEXT NOT NULL DEFAULT 'user'
+                  CHECK(role IN ('admin', 'gestor', 'user')),
       created_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -46,9 +47,51 @@ function initSchema(db) {
       updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    CREATE INDEX IF NOT EXISTS idx_notes_user_id    ON notes(user_id);
-    CREATE INDEX IF NOT EXISTS idx_notes_share_token ON notes(share_token);
+    CREATE TABLE IF NOT EXISTS activity_log (
+      id             TEXT PRIMARY KEY,
+      user_id        TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      note_id        TEXT REFERENCES notes(id) ON DELETE SET NULL,
+      action         TEXT NOT NULL,
+      target_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_notes_user_id      ON notes(user_id);
+    CREATE INDEX IF NOT EXISTS idx_notes_share_token  ON notes(share_token);
+    CREATE INDEX IF NOT EXISTS idx_activity_user_id   ON activity_log(user_id);
+    CREATE INDEX IF NOT EXISTS idx_activity_note_id   ON activity_log(note_id);
   `);
+    runMigrations(db);
+}
+
+function runMigrations(db) {
+  // Comprueba si la columna 'assigned_to' existe en notes.
+  // Si no existe, la añade (bases de datos creadas antes de este cambio).
+  const columns = db.prepare("PRAGMA table_info(notes)").all();
+  const hasAssignedTo = columns.some(c => c.name === "assigned_to");
+  if (!hasAssignedTo) {
+    db.exec("ALTER TABLE notes ADD COLUMN assigned_to TEXT REFERENCES users(id) ON DELETE SET NULL");
+    console.log("Migracion aplicada: columna assigned_to añadida a notes");
+  }
+
+  // Comprueba si la tabla activity_log existe ya
+  // (por si se ejecuta initSchema varias veces)
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='activity_log'").all();
+  if (tables.length === 0) {
+    db.exec(`
+      CREATE TABLE activity_log (
+        id             TEXT PRIMARY KEY,
+        user_id        TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        note_id        TEXT REFERENCES notes(id) ON DELETE SET NULL,
+        action         TEXT NOT NULL,
+        target_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX idx_activity_user_id ON activity_log(user_id);
+      CREATE INDEX idx_activity_note_id ON activity_log(note_id);
+    `);
+    console.log("Migracion aplicada: tabla activity_log creada");
+  }
 }
 
 module.exports = { getDb };
