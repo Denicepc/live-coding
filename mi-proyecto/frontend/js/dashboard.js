@@ -2,11 +2,23 @@ const token = getToken();
 
 // LÓGICA DE SEGURIDAD
 // Si estamos en el Dashboard y NO hay token, expulsa al usuario al login
-if (!token) {
+if (!token || isTokenExpired(token)) {
+    localStorage.removeItem("token");
     window.location.href = "../index.html";
 } else {
     // Si la seguridad pasa, cargamos las notas
     fetchNotes();
+}
+
+// Convierte caracteres especiales en texto plano inofensivo para que no ataquen
+function escapeHTML(str) {
+    if (!str) return "";
+    return str.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 // EVENTOS DEL DASHBOARD
@@ -99,11 +111,11 @@ function renderNotes(notes) {
                 <div class="w-4 h-4 bg-red-600 rounded-full border-2 border-white/30"></div>
             </div>
             
-            <input type="text" id="title-${note.id}" value="${note.title}" disabled
+            <input type="text" id="title-${note.id}" value="${escapeHTML(note.title)}" disabled
                 class="form-input p-1 border-0 focus:ring-0 bg-transparent disabled:bg-transparent disabled:opacity-100 disabled:text-slate-900 font-bold text-xl mb-1 w-full transition-colors rounded">
             
             <textarea id="content-${note.id}" disabled
-                class="form-textarea p-1 border-0 focus:ring-0 bg-transparent disabled:bg-transparent disabled:opacity-100 disabled:text-slate-900 font-handwritten text-lg flex-1 w-full resize-none transition-colors rounded">${note.content}</textarea>
+                class="form-textarea p-1 border-0 focus:ring-0 bg-transparent disabled:bg-transparent disabled:opacity-100 disabled:text-slate-900 font-handwritten text-lg flex-1 w-full resize-none transition-colors rounded">${escapeHTML(note.content)}</textarea>
             
             <div class="flex gap-2 justify-end mt-2">
                 <button id="restore-btn-${note.id}"  onclick="restoreNote('${note.id}')" 
@@ -186,7 +198,7 @@ async function toggleEditMode(noteId) {
             alert("Ocurrió un error al guardar los cambios.");
         }
     } else {
-        // --- ESTAMOS ENTRANDO AL MODO EDICIÓN ---
+        // --- MODO EDICIÓN ---
         titleInput.dataset.original = titleInput.value;
         contentInput.dataset.original = contentInput.value;
 
