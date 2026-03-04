@@ -12,11 +12,17 @@ const registerForm = document.getElementById("register-form");
 if (registerForm) {
     registerForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const username = document.getElementById("reg-username").value;
-        const email = document.getElementById("reg-email").value;
-        const password = document.getElementById("reg1-password").value;
-        const confirmPassword = document.getElementById("reg2-password").value;
+        let username = document.getElementById("reg-username").value;
+        let email = document.getElementById("reg-email").value;
+        let password = document.getElementById("reg1-password").value;
+        let confirmPassword = document.getElementById("reg2-password").value;
         const errorMsg = document.getElementById("reg-error");
+
+        // aseguramos que no introduzca ataque en los inputs
+        username = escapeHTML(username)
+        email = escapeHTML(email)
+        password = escapeHTML(password)
+        confirmPassword = escapeHTML(confirmPassword)
 
         if(password !== confirmPassword) {
             errorMsg.textContent = "Las contraseñas no coinciden";

@@ -10,19 +10,9 @@ if (!token || isTokenExpired(token)) {
     fetchNotes();
 }
 
-// Convierte caracteres especiales en texto plano inofensivo para que no ataquen
-function escapeHTML(str) {
-    if (!str) return "";
-    return str.toString()
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
 // EVENTOS DEL DASHBOARD
 const logoutBtn = document.getElementById("logout-btn");
+const gestionBtn = document.getElementById("gestion-btn");
 const createNoteBtn = document.getElementById("create-note-btn");
 
 // CERRAR SESIÓN
@@ -32,6 +22,14 @@ if (logoutBtn) {
         window.location.href = "../index.html"; // Redirigir al login
     });
 }
+
+// Gestión boton
+if (gestionBtn) {
+    gestionBtn.addEventListener("click", () => {
+        window.location.href = "../admin/admin.html"; // Redirigir a la página de gestión
+    });
+}
+
 
 // CREAR NOTA
 if (createNoteBtn) {
@@ -54,7 +52,7 @@ if (createNoteBtn) {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}` 
                 },
-                body: JSON.stringify({ title: titleInput.value, content: contentInput.value })
+                body: JSON.stringify({ title: escapeHTML(titleInput.value), content: escapeHTML(contentInput.value) })
             });
 
             if (response.ok) {
@@ -118,22 +116,28 @@ function renderNotes(notes) {
                 class="form-textarea p-1 border-0 focus:ring-0 bg-transparent disabled:bg-transparent disabled:opacity-100 disabled:text-slate-900 font-handwritten text-lg flex-1 w-full resize-none transition-colors rounded">${escapeHTML(note.content)}</textarea>
             
             <div class="flex gap-2 justify-end mt-2">
-                <button id="restore-btn-${note.id}"  onclick="restoreNote('${note.id}')" 
-                    class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors font-bold shadow-sm hidden">
+                <button class="restore-note-btn bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors font-bold shadow-sm hidden" data-note-id="${note.id}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-restore"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3.06 13a9 9 0 1 0 .49 -4.087" /><path d="M3 4.001v5h5" /><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
                     </svg>
                 </button>
-                <button id="edit-btn-${note.id}" onclick="toggleEditMode('${note.id}')" 
-                    class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition-colors font-bold shadow-sm">
+                <button class="edit-note-btn bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition-colors font-bold shadow-sm" data-note-id="${note.id}">
                     Editar
                 </button>
-                <button onclick="deleteNote('${note.id}')" 
-                    class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition-colors font-bold shadow-sm">
+                <button class="delete-note-btn bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition-colors font-bold shadow-sm" data-note-id="${note.id}">
                     Borrar
                 </button>
             </div>
         `;
         container.appendChild(noteDiv);
+        
+        // Agregar event listeners de forma segura
+        const restoreBtn = noteDiv.querySelector('.restore-note-btn');
+        const editBtn = noteDiv.querySelector('.edit-note-btn');
+        const deleteBtn = noteDiv.querySelector('.delete-note-btn');
+        
+        restoreBtn.addEventListener('click', () => restoreNote(note.id));
+        editBtn.addEventListener('click', () => toggleEditMode(note.id));
+        deleteBtn.addEventListener('click', () => deleteNote(note.id));
     });
 }
 
@@ -153,8 +157,8 @@ async function deleteNote(noteId) {
 async function toggleEditMode(noteId) {
     const titleInput = document.getElementById(`title-${noteId}`);
     const contentInput = document.getElementById(`content-${noteId}`);
-    const editBtn = document.getElementById(`edit-btn-${noteId}`);
-    const restoreBtn = document.getElementById(`restore-btn-${noteId}`);
+    const editBtn = document.querySelector(`.edit-note-btn[data-note-id="${noteId}"]`);
+    const restoreBtn = document.querySelector(`.restore-note-btn[data-note-id="${noteId}"]`);
 
     const isEditing = !titleInput.disabled;
 
@@ -221,8 +225,8 @@ async function toggleEditMode(noteId) {
 function restoreNote(noteId) {
     const titleInput = document.getElementById(`title-${noteId}`);
     const contentInput = document.getElementById(`content-${noteId}`);
-    const editBtn = document.getElementById(`edit-btn-${noteId}`);
-    const restoreBtn = document.getElementById(`restore-btn-${noteId}`);
+    const editBtn = document.querySelector(`.edit-note-btn[data-note-id="${noteId}"]`);
+    const restoreBtn = document.querySelector(`.restore-note-btn[data-note-id="${noteId}"]`);
 
     titleInput.value = titleInput.dataset.original || titleInput.value;
     contentInput.value = contentInput.dataset.original || contentInput.value;

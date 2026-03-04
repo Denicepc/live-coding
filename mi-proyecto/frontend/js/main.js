@@ -12,9 +12,12 @@ const loginForm = document.getElementById("login-form");
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault(); // para que no recargue el formulario
-        const identifier = document.getElementById("login-email").value;
-        const password = document.getElementById("login-password").value;
+        let identifier = document.getElementById("login-email").value;
+        let password = document.getElementById("login-password").value;
         const errorMsg = document.getElementById("login-error");
+
+        identifier = escapeHTML(identifier)
+        password = escapeHTML(password)
 
         try {
             const response = await fetch(`${API_URL}/auth/login`, {

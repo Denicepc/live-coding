@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Panel de Administración - Sticky Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Gochi+Hand&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-background-light font-display text-slate-900 min-h-screen flex flex-col cork-texture">
+
+    <header class="flex items-center justify-between px-8 py-3 bg-white sticky top-0 z-50 shadow">
+        <div class="flex items-center gap-4">
+            <h2 class="text-xl font-bold">Panel de Administración</h2>
+            <span id="user-role-badge" class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Cargando...</span>
+        </div>
+        <div class="flex gap-4">
+            <a href="../dashboard/dashboard.html" class="bg-gray-200 text-gray-800 px-4 py-2 rounded font-bold hover:bg-gray-300">Volver al Tablero</a>
+            <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded font-bold hover:bg-red-600">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+        <section id="stats-section" class="grid grid-cols-3 gap-6 mb-8 hidden">
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                <h3 class="text-sm text-gray-500 font-bold uppercase">Total Usuarios</h3>
+                <p id="stat-users" class="text-3xl font-bold mt-2">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-yellow-500">
+                <h3 class="text-sm text-gray-500 font-bold uppercase">Total Notas</h3>
+                <p id="stat-notes" class="text-3xl font-bold mt-2">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                <h3 class="text-sm text-gray-500 font-bold uppercase">Notas Públicas</h3>
+                <p id="stat-public" class="text-3xl font-bold mt-2">-</p>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold">Gestión de Usuarios</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 border-b">
+                            <th class="p-4 font-semibold">Usuario</th>
+                            <th class="p-4 font-semibold">Email</th>
+                            <th class="p-4 font-semibold">Rol</th>
+                            <th class="p-4 font-semibold">Notas Creadas</th>
+                            <th class="p-4 font-semibold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body" class="divide-y">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div id="assign-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-96 shadow-xl">
+            <h3 class="text-lg font-bold mb-4">Asignar Nota a Usuario</h3>
+            <p class="text-sm text-gray-600 mb-4">Introduce el ID de la nota que deseas transferir al usuario seleccionado.</p>
+            
+            <input type="hidden" id="assign-target-user-id">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-1">ID de la Nota</label>
+                <input type="text" id="assign-note-id" class="w-full border p-2 rounded" placeholder="Ej: uuid-de-la-nota">
+            </div>
+            
+            <div class="flex justify-end gap-2 mt-6">
+                <button id="close-modal-btn" class="bg-gray-300 px-4 py-2 rounded font-bold hover:bg-gray-400">Cancelar</button>
+                <button id="confirm-assign-btn" class="bg-[#eebd2b] px-4 py-2 rounded font-bold hover:opacity-90">Asignar Nota</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>
