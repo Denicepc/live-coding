@@ -102,42 +102,69 @@ function renderNotes(notes) {
 
     notes.forEach(note => {
         const noteDiv = document.createElement("div");
-        noteDiv.className = `sticky-note bg-[${note.color || '#fef08a'}] p-6 h-64 relative rotate-1 flex flex-col`;
+        noteDiv.className = `sticky-note bg-[${note.color || '#fef08a'}] p-6 h-64 relative rotate-1 flex flex-col shadow-md`;
         
+        const isPublic = !!note.is_public;
+        const privacyClass = isPublic ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700';
+        const privacyText = isPublic ? 'Pública' : 'Privada';
+
         noteDiv.innerHTML = `
             <div class="absolute -top-3 left-1/2 -translate-x-1/2 pushpin">
-                <div class="w-4 h-4 bg-red-600 rounded-full border-2 border-white/30"></div>
+                <div class="w-4 h-4 bg-red-600 rounded-full border-2 border-white/30 shadow"></div>
             </div>
             
-            <input type="text" id="title-${note.id}" value="${escapeHTML(note.title)}" disabled
-                class="form-input p-1 border-0 focus:ring-0 bg-transparent disabled:bg-transparent disabled:opacity-100 disabled:text-slate-900 font-bold text-xl mb-1 w-full transition-colors rounded">
+            <div class="flex justify-between items-start mb-2 gap-2">
+                <input type="text" id="title-${note.id}" value="${escapeHTML(note.title)}" disabled
+                    class="form-input p-0 border-0 focus:ring-0 bg-transparent disabled:bg-transparent disabled:opacity-100 disabled:text-slate-900 font-bold text-lg w-full transition-colors rounded">
+                
+                <div class="flex flex-row gap-1 items-center">
+                    <button class="toggle-privacy-btn text-[10px] text-white px-2 py-1 rounded font-bold shadow-sm transition-colors whitespace-nowrap ${privacyClass}" 
+                        data-note-id="${note.id}" data-public="${isPublic}">
+                        ${privacyText}
+                    </button>
+
+                    ${isPublic ? `
+                        <button class="copy-link-btn bg-white/50 hover:bg-white text-slate-700 p-1 rounded shadow-sm border border-slate-300 transition-all flex items-center justify-center" 
+                            title="Copiar enlace público" data-token="${note.share_token}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
             
             <textarea id="content-${note.id}" disabled
-                class="form-textarea p-1 border-0 focus:ring-0 bg-transparent disabled:bg-transparent disabled:opacity-100 disabled:text-slate-900 font-handwritten text-lg flex-1 w-full resize-none transition-colors rounded">${escapeHTML(note.content)}</textarea>
-            
-            <div class="flex gap-2 justify-end mt-2">
-                <button class="restore-note-btn bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors font-bold shadow-sm hidden" data-note-id="${note.id}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-restore"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3.06 13a9 9 0 1 0 .49 -4.087" /><path d="M3 4.001v5h5" /><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
-                    </svg>
-                </button>
-                <button class="edit-note-btn bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition-colors font-bold shadow-sm" data-note-id="${note.id}">
-                    Editar
-                </button>
-                <button class="delete-note-btn bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition-colors font-bold shadow-sm" data-note-id="${note.id}">
-                    Borrar
-                </button>
+                class="form-textarea p-0 border-0 focus:ring-0 bg-transparent disabled:bg-transparent disabled:opacity-100 disabled:text-slate-900 font-handwritten text-lg flex-1 w-full resize-none transition-colors rounded">${escapeHTML(note.content)}</textarea>
+            <div class="flex gap-2 justify-between">
+                <div class="mt-4 text-xs text-black/40 font-bold">
+                    Creada el: ${new Date(note.created_at).toLocaleDateString()}
+                </div>
+                <div class="flex gap-2 justify-end mt-2">
+                    <button class="restore-note-btn bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors font-bold shadow-sm hidden" data-note-id="${note.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-restore"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3.06 13a9 9 0 1 0 .49 -4.087" /><path d="M3 4.001v5h5" /><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>
+                    </button>
+                    <button class="edit-note-btn bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition-colors font-bold shadow-sm" data-note-id="${note.id}">Editar</button>
+                    <button class="delete-note-btn bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition-colors font-bold shadow-sm" data-note-id="${note.id}">Borrar</button>
+                </div>
             </div>
         `;
         container.appendChild(noteDiv);
         
-        // Agregar event listeners de forma segura
-        const restoreBtn = noteDiv.querySelector('.restore-note-btn');
-        const editBtn = noteDiv.querySelector('.edit-note-btn');
-        const deleteBtn = noteDiv.querySelector('.delete-note-btn');
+        // Event Listeners
+        noteDiv.querySelector('.toggle-privacy-btn').addEventListener('click', () => togglePrivacy(note.id, !isPublic));
         
-        restoreBtn.addEventListener('click', () => restoreNote(note.id));
-        editBtn.addEventListener('click', () => toggleEditMode(note.id));
-        deleteBtn.addEventListener('click', () => deleteNote(note.id));
+        if (isPublic) {
+            noteDiv.querySelector('.copy-link-btn').addEventListener('click', (e) => {
+                const token = e.currentTarget.getAttribute('data-token');
+                copyPublicLink(token);
+            });
+        }
+
+        noteDiv.querySelector('.restore-note-btn').addEventListener('click', () => restoreNote(note.id));
+        noteDiv.querySelector('.edit-note-btn').addEventListener('click', () => toggleEditMode(note.id));
+        noteDiv.querySelector('.delete-note-btn').addEventListener('click', () => deleteNote(note.id));
     });
 }
 
@@ -241,4 +268,42 @@ function restoreNote(noteId) {
     editBtn.classList.replace('hover:bg-green-600', 'hover:bg-orange-700');
 
     restoreBtn.classList.add("hidden");
+}
+
+async function togglePrivacy(noteId, newState) {
+    try {
+        const response = await fetch(`${API_URL}/notes/${noteId}`, {
+            method: "PUT",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` 
+            },
+            body: JSON.stringify({ is_public: newState })
+        });
+
+        if (response.ok) {
+            fetchNotes(); // Recargar para actualizar botones y tokens
+        } else {
+            const data = await response.json();
+            alert("Error: " + data.error);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function copyPublicLink(shareToken) {
+    if (!shareToken) return alert("Esta nota no tiene un token de compartido.");
+    
+    // Construye la URL basada en tu dominio actual
+    // Ajusta 'public.html' al nombre de tu archivo de visualización pública
+    const url = `${window.location.origin}/public/public.html?token=${shareToken}`;
+    
+    navigator.clipboard.writeText(url).then(() => {
+        alert("¡Enlace copiado al portapapeles!");
+    }).catch(err => {
+        console.error('Error al copiar:', err);
+        // Fallback por si falla navigator.clipboard
+        alert("Enlace: " + url);
+    });
 }

@@ -29,9 +29,10 @@ async function initAdminPanel() {
             
             // Cargar datos del panel
             fetchUsersList();
+            fetchAllNotes(); // muestra todas las notas
             
             // Solo el Admin puede ver estadísticas globales según tu API
-            if (currentUserRole === "admin") {
+            if (currentUserRole === "admin" || currentUserRole === "gestor") {
                 document.getElementById("stats-section").classList.remove("hidden");
                 fetchStats();
             }
@@ -84,10 +85,11 @@ function renderUsersTable(users) {
             </select>
         ` : `<span class="capitalize font-medium text-slate-700">${user.role}</span>`;
 
-        // Botones de acción (asignar nota o borrar usuario)
+        // Botones de acción (ver notas, asignar nota o borrar usuario)
+        const btnViewNotes = `<button onclick="fetchUserSpecificNotes('${user.id}', '${escapeHTML(user.username)}')" class="bg-emerald-500 text-white px-3 py-1 rounded text-xs hover:bg-emerald-600 font-bold mr-2">Ver Notas</button>`;
         const btnAssign = `<button onclick="openAssignModal('${user.id}')" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 font-bold">Asignar Nota</button>`;
         const btnDelete = (currentUserRole === "admin" && !isSelf) 
-            ? `<button onclick="deleteUser('${user.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 font-bold ml-2">Borrar</button>` 
+            ? `<button onclick="deleteUser('${user.id}', '${escapeHTML(user.username)}')" class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 font-bold ml-2">Borrar</button>` 
             : '';
 
         const tr = document.createElement("tr");
@@ -96,7 +98,7 @@ function renderUsersTable(users) {
             <td class="p-4 text-gray-600">${escapeHTML(user.email)}</td>
             <td class="p-4">${roleSelect}</td>
             <td class="p-4">${notesDisplay}</td>
-            <td class="p-4">${btnAssign} ${btnDelete}</td>
+            <td class="p-4">${btnViewNotes} ${btnAssign} ${btnDelete}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -146,9 +148,16 @@ async function deleteUser(userId) {
 // 5. ASIGNAR NOTAS (Admin y Gestor)
 const modal = document.getElementById("assign-modal");
 
-function openAssignModal(targetUserId) {
-    document.getElementById("assign-target-user-id").value = targetUserId;
-    document.getElementById("assign-note-id").value = "";
+// El botón puede pasar el nombre del usuario para el título del modal
+function openAssignModal(targetUserId, targetUsername) {
+    const userIdInput = document.getElementById("assign-target-user-id");
+    const modalTitle = document.getElementById("modal-title");
+    const noteIdInput = document.getElementById("assign-note-id");
+
+    if (userIdInput) userIdInput.value = targetUserId;
+    if (modalTitle) modalTitle.textContent = `Asignar nota a ${targetUsername || 'usuario'}`;
+    if (noteIdInput) noteIdInput.value = "";
+    
     modal.classList.remove("hidden");
 }
 
@@ -186,7 +195,7 @@ document.getElementById("confirm-assign-btn").addEventListener("click", async ()
     }
 });
 
-// 6. ESTADÍSTICAS (Solo Admin)
+// 6. ESTADÍSTICAS (Solo Admin o gestor)
 async function fetchStats() {
     try {
         const response = await fetch(`${API_URL}/admin/stats`, {
@@ -200,6 +209,133 @@ async function fetchStats() {
         }
     } catch (error) {
         console.error(error);
+    }
+}
+
+// 7. OBTENER TODAS LAS NOTAS (Solo Admin o gestor)
+async function fetchAllNotes() {
+    try {
+        const response = await fetch(`${API_URL}/notes`, { // Asegúrate que esta ruta exista en tu backend
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            renderAllNotesTable(data.notes);
+        }
+    } catch (error) { console.error("Error cargando notas globales:", error); }
+}
+
+function renderAllNotesTable(notes) {
+    const tbody = document.getElementById("all-notes-table-body");
+    tbody.innerHTML = "";
+
+    if (notes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500 italic">Este usuario no tiene notas visibles para tu rol.</td></tr>`;
+        return;
+    }
+
+    notes.forEach(note => {
+        const isAdmin = currentUserRole === "admin";
+        
+        // El Admin puede editar y borrar. El Gestor (o cualquier otro) solo editar.
+        const btnEdit = `<button onclick="editNoteAdmin('${note.id}')" class="bg-amber-500 text-white px-2 py-1 rounded hover:bg-amber-600 transition-colors text-xs font-bold">Editar</button>`;
+        
+        const btnDelete = isAdmin 
+            ? `<button onclick="deleteNoteAdmin('${note.id}')" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors text-xs font-bold">Borrar</button>` 
+            : `<span class="text-gray-400 text-xs italic">Sin permiso borrar</span>`;
+
+        const tr = document.createElement("tr");
+        tr.className = "border-b border-gray-100 hover:bg-gray-50 transition-colors";
+        tr.innerHTML = `
+            <td class="p-4 font-mono text-[10px] text-blue-600">${note.id}</td>
+            <td class="p-4">
+                <div class="flex flex-col">
+                    <span class="font-bold text-slate-700">${escapeHTML(note.title)}</span>
+                    ${note.is_public ? '<span class="text-[9px] text-green-600 font-bold">PÚBLICA</span>' : '<span class="text-[9px] text-red-600 font-bold">PRIVADA</span>'}
+                </div>
+            </td>
+            <td class="p-4 text-gray-600 font-medium">${escapeHTML(note.content || 'Usuario')}</td>
+            <td class="p-4 text-gray-600 font-medium">${escapeHTML(note.username || 'Usuario')}</td>
+            <td class="p-4 flex gap-2">
+                ${btnEdit}
+                ${btnDelete}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Función para borrar nota desde el panel admin (Solo Admin)
+async function deleteNoteAdmin(noteId) {
+    if (currentUserRole !== "admin") return alert("No tienes permisos.");
+    if (!confirm("¿Eliminar esta nota permanentemente?")) return;
+
+    try {
+        const response = await fetch(`${API_URL}/admin/notes/${noteId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (response.ok) fetchAllNotes();
+    } catch (error) { console.error(error); }
+}
+
+//editar notas
+async function editNoteAdmin(noteId) {
+    const newTitle = prompt("Nuevo título de la nota:");
+    if (newTitle === null) return; // Cancelado
+
+    const newContent = prompt("Nuevo contenido:");
+    if (newContent === null) return;
+
+    try {
+        const response = await fetch(`${API_URL}/admin/notes/${noteId}`, { // Asegúrate de tener esta ruta en tu backend admin
+            method: "PUT",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` 
+            },
+            body: JSON.stringify({ title: newTitle, content: newContent })
+        });
+
+        if (response.ok) {
+            alert("Nota actualizada correctamente");
+            fetchAllNotes(); // Recargar tabla
+        } else {
+            const err = await response.json();
+            alert("Error: " + err.error);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function fetchUserSpecificNotes(userId, username) {
+    try {
+        const response = await fetch(`${API_URL}/admin/users/${userId}/notes`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            
+            // 1. Actualizamos el título con el nombre del usuario
+            document.getElementById("user-notes-title").textContent = `Notas de: ${username}`;
+            
+            // 2. Renderizamos las notas en la tabla
+            renderAllNotesTable(data.notes);
+            
+            // 3. QUITAMOS la clase 'hidden' para que la sección aparezca
+            const notesSection = document.getElementById("user-notes-section");
+            notesSection.classList.remove("hidden");
+            
+            // 4. Hacemos scroll suave hasta la tabla para mejorar la UX
+            notesSection.scrollIntoView({ behavior: 'smooth' });
+            
+        } else {
+            alert("No se pudieron cargar las notas de este usuario.");
+        }
+    } catch (error) {
+        console.error("Error al obtener notas:", error);
     }
 }
 

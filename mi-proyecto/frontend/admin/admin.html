@@ -57,11 +57,33 @@
                 </table>
             </div>
         </section>
+
+        
+        <section id="user-notes-section" class="bg-white rounded-lg shadow overflow-hidden mt-8 hidden">
+            <div class="px-6 py-4 border-b bg-slate-50">
+                <h3 id="user-notes-title" class="text-lg font-bold">Todas las Notas del Usuario</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 border-b">
+                            <th class="p-4 font-semibold text-sm">ID Nota</th>
+                            <th class="p-4 font-semibold text-sm">Título</th>
+                            <th class="p-4 font-semibold text-sm">Contenido</th>
+                            <th class="p-4 font-semibold text-sm">Propietario</th>
+                            <th class="p-4 font-semibold text-sm">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-notes-table-body" class="divide-y text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </section>    
     </main>
 
     <div id="assign-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-lg w-96 shadow-xl">
-            <h3 class="text-lg font-bold mb-4">Asignar Nota a Usuario</h3>
+            <h3 id="modal-title" class="text-lg font-bold mb-4">Asignar Nota a Usuario</h3>
             <p class="text-sm text-gray-600 mb-4">Introduce el ID de la nota que deseas transferir al usuario seleccionado.</p>
             
             <input type="hidden" id="assign-target-user-id">
