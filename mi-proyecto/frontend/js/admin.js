@@ -271,7 +271,7 @@ async function deleteNoteAdmin(noteId) {
     if (!confirm("¿Eliminar esta nota permanentemente?")) return;
 
     try {
-        const response = await fetch(`${API_URL}/admin/notes/${noteId}`, {
+        const response = await fetch(`${API_URL}/notes/${noteId}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
         });
@@ -288,7 +288,7 @@ async function editNoteAdmin(noteId) {
     if (newContent === null) return;
 
     try {
-        const response = await fetch(`${API_URL}/admin/notes/${noteId}`, { // Asegúrate de tener esta ruta en tu backend admin
+        const response = await fetch(`${API_URL}/notes/${noteId}`, { // Asegúrate de tener esta ruta en tu backend admin
             method: "PUT",
             headers: { 
                 "Content-Type": "application/json",

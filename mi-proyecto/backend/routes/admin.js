@@ -23,7 +23,7 @@ function formatNote(note) {
 }
 
 const router = express.Router();
-router.use(authMiddleware, adminMiddleware);
+router.use(authMiddleware);
 
 // GET /api/admin/users -- lista todos los usuarios (sin password)
 router.get("/users", (req, res) => {
