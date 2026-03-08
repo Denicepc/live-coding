@@ -90,7 +90,8 @@ router.put("/:id", (req, res) => {
   const db = getDb();
   const existing = db.prepare("SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL").get(req.params.id);
   if (!existing) return res.status(404).json({ error: "Nota no encontrada" });
-  if (existing.user_id !== req.user.id) return res.status(403).json({ error: "Sin acceso a esta nota" });
+  if (existing.user_id !== req.user.id && !["admin", "gestor"].includes(req.user.role))
+  return res.status(403).json({ error: "Sin acceso a esta nota" });
 
   const { title, content, color, tags, is_public } = req.body;
   if (title !== undefined && title.trim().length === 0)
