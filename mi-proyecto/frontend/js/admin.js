@@ -78,12 +78,15 @@ function renderUsersTable(users) {
         
         // Select de roles
         const roleSelect = canChangeRole ? `
-            <select onchange="changeRole('${user.id}', this.value)" class="border rounded p-1 text-sm bg-white">
+            <select 
+                onchange="changeRole('${user.id}', this.value)" 
+                class="border border-slate-300 rounded-md px-3 py-2 text-base bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[120px] cursor-pointer"
+            >
                 <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
                 <option value="gestor" ${user.role === 'gestor' ? 'selected' : ''}>Gestor</option>
                 <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
             </select>
-        ` : `<span class="capitalize font-medium text-slate-700">${user.role}</span>`;
+        ` : `<span class="capitalize font-medium text-slate-700 px-3 py-2 block">${user.role}</span>`;
 
         // Botones de acción (ver notas, asignar nota o borrar usuario)
         const btnViewNotes = `<button onclick="fetchUserSpecificNotes('${user.id}', '${escapeHTML(user.username)}')" class="bg-emerald-500 text-white px-3 py-1 rounded text-xs hover:bg-emerald-600 font-bold mr-2">Ver Notas</button>`;
@@ -93,6 +96,7 @@ function renderUsersTable(users) {
             : '';
 
         const tr = document.createElement("tr");
+        tr.id = `user-row-${user.id}`;
         tr.innerHTML = `
             <td class="p-4 font-bold text-slate-800">${escapeHTML(user.username)}</td>
             <td class="p-4 text-gray-600">${escapeHTML(user.email)}</td>
@@ -102,6 +106,25 @@ function renderUsersTable(users) {
         `;
         tbody.appendChild(tr);
     });
+}
+
+// Función para actualizar el conteo de notas de un usuario en la tabla
+function updateUserNoteCount(userId, delta) {
+    const userRow = document.getElementById(`user-row-${userId}`);
+    if (userRow) {
+        const noteCountCell = userRow.querySelector('td:nth-child(4)'); // Cuarta columna: notas
+        const currentText = noteCountCell.textContent;
+        let currentCount = 0;
+        if (currentText.includes('notas')) {
+            currentCount = parseInt(currentText.match(/\d+/)[0]) || 0;
+        }
+        currentCount += delta;
+        if (currentCount > 0) {
+            noteCountCell.innerHTML = `<span class="bg-green-100 text-green-800 font-bold px-2 py-1 rounded-full text-xs">${currentCount} notas</span>`;
+        } else {
+            noteCountCell.innerHTML = `<span class="text-gray-400 italic">No ha escrito notas</span>`;
+        }
+    }
 }
 
 // 3. CAMBIAR ROL (Solo Admin)
@@ -246,6 +269,8 @@ function renderAllNotesTable(notes) {
 
         const tr = document.createElement("tr");
         tr.className = "border-b border-gray-100 hover:bg-gray-50 transition-colors";
+        tr.id = `note-row-${note.id}`;
+        tr.dataset.userId = note.user_id;
         tr.innerHTML = `
             <td class="p-4 font-mono text-[10px] text-blue-600">${note.id}</td>
             <td class="p-4">
@@ -275,7 +300,15 @@ async function deleteNoteAdmin(noteId) {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
         });
-        if (response.ok) fetchAllNotes();
+        if (response.ok) {
+            const row = document.getElementById(`note-row-${noteId}`);
+            if (row) {
+                const userId = row.dataset.userId;
+                row.remove();
+                updateUserNoteCount(userId, -1);
+            }
+            if(currentUserRole === "admin") fetchStats();
+        }
     } catch (error) { console.error(error); }
 }
 
@@ -298,8 +331,19 @@ async function editNoteAdmin(noteId) {
         });
 
         if (response.ok) {
+            // Actualizar la fila específica sin recargar la tabla
+            const row = document.getElementById(`note-row-${noteId}`);
+            if (row) {
+                // Actualizar título (primer span con clase font-bold)
+                const titleElement = row.querySelector('.font-bold');
+                if (titleElement) titleElement.textContent = escapeHTML(newTitle);
+                
+                // Actualizar contenido (tercera celda td)
+                const contentCell = row.querySelector('td:nth-child(3)');
+                if (contentCell) contentCell.textContent = escapeHTML(newContent);
+            }
+            
             alert("Nota actualizada correctamente");
-            fetchAllNotes(); // Recargar tabla
         } else {
             const err = await response.json();
             alert("Error: " + err.error);
