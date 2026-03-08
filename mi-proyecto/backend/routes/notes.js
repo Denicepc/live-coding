@@ -52,7 +52,8 @@ router.get("/:id", (req, res) => {
   const db = getDb();
   const note = db.prepare("SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL").get(req.params.id);
   if (!note) return res.status(404).json({ error: "Nota no encontrada" });
-  if (note.user_id !== req.user.id) return res.status(403).json({ error: "Sin acceso a esta nota" });
+  if (note.user_id !== req.user.id && !["admin", "gestor"].includes(req.user.role))
+  return res.status(403).json({ error: "Sin acceso a esta nota" });
   return res.json({ note: formatNote(note) });
 });
 
